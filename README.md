@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AM Concepts</title>
+    <title>Document</title>
     <style>
         .hidden {
             display: none;
@@ -211,13 +211,62 @@
                 } catch (err) {
                     console.error(err);
                 }
+            };
+            async function uploadData() {
+                var file = fileInput.files[0];
+                if (!file) {
+                    alert('Please select a file to upload');
+                    return;
+                }
+
+                // Collect form data
+                var vorname = document.getElementById('vorname').value;
+                var nachname = document.getElementById('nachname').value;
+                var email = document.getElementById('email').value;
+
+                // Create a new file name using the original file name and user's email
+                var newFileName = file.name.split('.').slice(0, -1).join('.') + '_' + email.replace(/[@.]/g, '_') + '.pdf';
+
+                // Request pre-signed URL from your Lambda function
+                try {
+                    var presignedUrlResponse = await fetch('https://zfaoybvet2.execute-api.eu-central-1.amazonaws.com/prod', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            fileName: newFileName,
+                            fileType: file.type
+                        })
+                    });
+
+                    var presignedUrlData = await presignedUrlResponse.json();
+                    var presignedUrl = presignedUrlData.presignedUrl;
+
+                    // Upload the file to S3 using the pre-signed URL
+                    var uploadResponse = await fetch(presignedUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': file.type
+                        },
+                        body: file
+                    });
+
+                    if (uploadResponse.ok) {
+                        console.log(`File uploaded successfully to: ${presignedUrl}`);
+                    } else {
+                        console.error('File upload failed.');
+                    }
+                } catch (err) {
+                    console.error('Error getting pre-signed URL or uploading file:', err);
+                }
             }
         });
     </script>
-    <script
+    <!--<script
     src="https://static.soulmachines.com/widget-snippet-1.12.0.min.js"
     data-sm-api-key="eyJzb3VsSWQiOiJkZG5hLWFuZHJlYXMta2huLS1hc3Nlc3NtZW50IiwiYXV0aFNlcnZlciI6Imh0dHBzOi8vZGguYXouc291bG1hY2hpbmVzLmNsb3VkL2FwaS9qd3QiLCJhdXRoVG9rZW4iOiJhcGlrZXlfdjFfM2Y2MTk0MGItMzdjYS00NmJjLWJjYjYtYjVmNGI2ODZkODYyIn0="
-    ></script>
+    ></script>-->
     <!--<script>
         /**
   * add support here for all JS-based config options,
@@ -324,6 +373,5 @@ const apiKey = "eyJzb3VsSWQiOiJkZG5hLWFuZHJlYXMta2huLS1hc3Nlc3NtZW50IiwiYXV0aFNl
 
 
  
-
 
 
