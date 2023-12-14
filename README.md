@@ -162,56 +162,7 @@
                 event.preventDefault();
                 uploadData();
             });
- 
-            // AWS configuration
-            var secretAccessKey = '1fk9CYov/hyodzA/Rx5xP5tBqswnF9d8GeRcJXQ1'; // actual key
-            var accessKeyId = 'AKIASBQTXRJ7R65CJMW4'; // access id
-            var bucket = 's3-amc-file-upload-bucket'; // bucket name
-            var region = 'eu-central-1'; // region
- 
-            var client = new AWS.S3({
-                region: region,
-                credentials: new AWS.Credentials(accessKeyId, secretAccessKey)
-            });
- 
-            async function uploadData() {
-                var file = fileInput.files[0];
-                if (!file) {
-                    alert('Please select a file to upload');
-                    return;
-                }
- 
-                // Collect form data
-                var vorname = document.getElementById('vorname').value;
-                var nachname = document.getElementById('nachname').value;
-                var email = document.getElementById('email').value;
- 
-                // Define the metadata
-                var metadata = {
-                    'Vorname': vorname,
-                    'Nachname': nachname,
-                    'Email': email // Changed to 'Email' to match typical casing conventions
-                };
- 
-                // Create a new file name using the original file name and user's email
-                var newFileName = file.name.split('.').slice(0, -1).join('.') + '_' + email.replace(/[@.]/g, '_') + '.pdf';
- 
-                var params = {
-                    Bucket: bucket,
-                    Key: newFileName, // Use the new file name as the key
-                    Body: file,
-                    Metadata: metadata  // Include the metadata in the upload parameters
-                };
- 
-                try {
-                    var response = await client.putObject(params).promise();
-                    console.log(`https://${bucket}.s3.${region}.amazonaws.com/${newFileName}`);
-                        window.location.href = 'https://ddna-andreas-khn--assessment.soului.dh.az.soulmachines.cloud/?sig=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MDE3NzU1MzcsImlzcyI6InNpZ25lZF91cmwtMWNhOWU2NmUtNWZhMy00ZTAxLTg4YzQtMTNhZTEzZDNiMzg4IiwiZXhwIjoxNzg4MDg5MTM3LCJlbWFpbCI6ImFuZHJlYXMta2huLS1hc3Nlc3NtZW50QGRkbmEuc3R1ZGlvIiwic291bElkIjoiZGRuYS1hbmRyZWFzLWtobi0tYXNzZXNzbWVudCJ9.CxjmlGy5B-A1_chDUJGpGCEMk69ITQHw0vBxgZZXFqQ'; 
- 
-                } catch (err) {
-                    console.error(err);
-                }
-            };
+                  
             async function uploadData() {
                 var file = fileInput.files[0];
                 if (!file) {
@@ -373,5 +324,6 @@ const apiKey = "eyJzb3VsSWQiOiJkZG5hLWFuZHJlYXMta2huLS1hc3Nlc3NtZW50IiwiYXV0aFNl
 
 
  
+
 
 
