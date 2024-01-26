@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .hidden {
+            display: none;
+        }
+ 
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f4f4f4;
+        }
+ 
+        #uploadForm {
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+ 
+        #uploadForm div {
+            margin-bottom: 15px;
+            position: relative;
+        }
+ 
+        label {
+            color: #333;
+            position: absolute;
+            bottom: 8px;
+            left: 5px;
+            transition: all 0.3s ease;    
+        }
+ 
+        input[type="text"],
+        input[type="email"] {
+            width: 100%;
+            padding: 10px 0 10px 5px;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            box-sizing: border-box;
+            background-color: transparent;
+        }
+ 
+        input[type="file"] {
+            display: none;
+        }
+ 
+        button[type="submit"],
+        .cv-button {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px;
+            margin-top: 15px;
+            cursor: pointer;
+            display: block;
+            width: 100%;
+        }
+ 
+        button[type="submit"]:hover,
+        .cv-button:hover {
+            background-color: #555;
+        }
+ 
+        .cv-button::before {
+            content: '+';
+            margin-right: 5px;
+            color: #333;
+            font-size: 20px;
+            line-height: 20px;
+            vertical-align: middle;
+        }
+ 
+        .cv-button:hover::before {
+            color: white;
+        }
+ 
+        .input-not-empty {
+            color: transparent;
+        }
+ 
+        #fileName {
+            display: block;
+            margin-top: 10px;
+               font-size: 12px;
+        }
+ 
+    </style>
+</head>
+<body>
+    <form id="uploadForm">
+        <div>
+            <input type="text" id="vorname" name="vorname" required placeholder=" " oninput="toggleLabelVisibility(this)">
+            <label for="vorname">Vorname</label>
+        </div>
+        <div>
+            <input type="text" id="nachname" name="nachname" required placeholder=" " oninput="toggleLabelVisibility(this)">
+            <label for="nachname">Nachname</label>
+        </div>
+        <div>
+            <input type="email" id="email" name="email" required placeholder=" " oninput="toggleLabelVisibility(this)">
+            <label for="email">Email</label>
+        </div>
+        <div class="blockS-container">
+            <button type="button" id="CVButton" class="cv-button">Lebenslauf hochladen</button>
+            <span id="fileName"></span>
+        </div>
+        <input
+            type="file"
+            id="fileInput"
+            class="hidden"
+            accept="application/pdf"
+        />
+        <div>
+            <button type="submit">Submit</button>
+        </div>
+    </form>
+    <script src=https://sdk.amazonaws.com/js/aws-sdk-2.813.0.min.js></script>
+    <script>
+        
+        function toggleLabelVisibility(input) {
+            var label = input.nextElementSibling;
+            if (input.value) {
+                label.classList.add('input-not-empty');
+            } else {
+                label.classList.remove('input-not-empty');
+            }
+        }
+ 
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('#uploadForm input[type="text"], #uploadForm input[type="email"]').forEach(function(input) {
+                toggleLabelVisibility(input);
+            });
+ 
+            var fileInput = document.getElementById('fileInput');
+            var cvButton = document.getElementById('CVButton');
+            var fileNameDisplay = document.getElementById('fileName');
+            var form = document.getElementById('uploadForm');
+ 
+            cvButton.addEventListener('click', function() {
+                fileInput.click();
+            });
+ 
+            fileInput.addEventListener('change', function() {
+                if (fileInput.files.length > 0) {
+                    fileNameDisplay.textContent = 'Ausgewählte Datei: ' + fileInput.files[0].name;
+                } else {
+                    fileNameDisplay.textContent = '';
+                }
+            });
+ 
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                doS3Upload();
+            });
+
+                
+            async function doS3Upload() {
+                const fileInput = document.getElementById('fileInput');
+                const file = fileInput.files[0];
+
+                if (!file) {
+                    alert('Please select a file to upload');
+                    console.error('No file selected');
+                    return;
+                }
+
+                // Collect form data
+                var vorname = document.getElementById('vorname').value;
+                var nachname = document.getElementById('nachname').value;
+                var email = document.getElementById('email').value;
+                
+                // Create a new file name using the original file name and user's email
+                //var newFileName = file.name.split('.').slice(0, -1).join('.') + '_' + email.replace(/[@.]/g, '_') + '.pdf';
+
+                // Assume you have the '/get-signed-url' endpoint available
+                const getUrlResponse = await fetch("https://2l2yala1ci.execute-api.eu-central-1.amazonaws.com/prod/getPreSignedURL", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        filename: file.name,
+                        vorname: vorname,
+                        nachname: nachname,
+                        email: email,
+                        contentType: file.type || "application/octet-stream; charset=binary",
+                    }),
+                });
+                const { url } = await getUrlResponse.json();
+
+                console.log(url);
+
+                const uploadResponse = await fetch(url, {
+                    method: "PUT",
+                    body: file,
+                    headers: {
+                        "Content-Type": file.type   
+                    },
+                });
+
+                if (uploadResponse.ok) {
+                    console.log('File uploaded successfully');
+                    //alert('Upload successful');
+
+                    window.location.href = 'https://ddna-andreas-khn--assessment.soului.dh.az.soulmachines.cloud/?sig=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MDE3NzU1MzcsImlzcyI6InNpZ25lZF91cmwtMWNhOWU2NmUtNWZhMy00ZTAxLTg4YzQtMTNhZTEzZDNiMzg4IiwiZXhwIjoxNzg4MDg5MTM3LCJlbWFpbCI6ImFuZHJlYXMta2huLS1hc3Nlc3NtZW50QGRkbmEuc3R1ZGlvIiwic291bElkIjoiZGRuYS1hbmRyZWFzLWtobi0tYXNzZXNzbWVudCJ9.CxjmlGy5B-A1_chDUJGpGCEMk69ITQHw0vBxgZZXFqQ';
+                } else {
+                    alert('Error uploading file:', uploadResponse.statusText);
+                    console.error('Error uploading file:', uploadResponse.statusText);
+                }
+            }
+            }
+        );
+    </script>
+</body>
+
+</html>
