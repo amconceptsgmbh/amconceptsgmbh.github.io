@@ -160,13 +160,17 @@
  
             form.addEventListener('submit', function(event) {
                 event.preventDefault();
-                uploadData();
+                doS3Upload();
             });
-                  
-            async function uploadData() {
-                var file = fileInput.files[0];
+
+                
+            async function doS3Upload() {
+                const fileInput = document.getElementById('fileInput');
+                const file = fileInput.files[0];
+
                 if (!file) {
                     alert('Please select a file to upload');
+                    console.error('No file selected');
                     return;
                 }
 
@@ -174,156 +178,49 @@
                 var vorname = document.getElementById('vorname').value;
                 var nachname = document.getElementById('nachname').value;
                 var email = document.getElementById('email').value;
-
+                
                 // Create a new file name using the original file name and user's email
-                var newFileName = file.name.split('.').slice(0, -1).join('.') + '_' + email.replace(/[@.]/g, '_') + '.pdf';
+                //var newFileName = file.name.split('.').slice(0, -1).join('.') + '_' + email.replace(/[@.]/g, '_') + '.pdf';
 
-                // Request pre-signed URL from your Lambda function
-                try {
-                    var presignedUrlResponse = await fetch('https://zfaoybvet2.execute-api.eu-central-1.amazonaws.com/prod', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            fileName: newFileName,
-                            fileType: file.type
-                        })
-                    });
+                // Assume you have the '/get-signed-url' endpoint available
+                const getUrlResponse = await fetch("https://2l2yala1ci.execute-api.eu-central-1.amazonaws.com/prod/getPreSignedURL", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        filename: file.name,
+                        vorname: vorname,
+                        nachname: nachname,
+                        email: email,
+                        contentType: file.type || "application/octet-stream; charset=binary",
+                    }),
+                });
+                const { url } = await getUrlResponse.json();
 
-                    var presignedUrlData = await presignedUrlResponse.json();
-                    var presignedUrl = presignedUrlData.presignedUrl;
+                console.log(url);
 
-                    // Upload the file to S3 using the pre-signed URL
-                    var uploadResponse = await fetch(presignedUrl, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': file.type
-                        },
-                        body: file
-                    });
+                const uploadResponse = await fetch(url, {
+                    method: "PUT",
+                    body: file,
+                    headers: {
+                        "Content-Type": file.type   
+                    },
+                });
 
-                    if (uploadResponse.ok) {
-                        console.log(`File uploaded successfully to: ${presignedUrl}`);
-                    } else {
-                        console.error('File upload failed.');
-                    }
-                } catch (err) {
-                    console.error('Error getting pre-signed URL or uploading file:', err);
+                if (uploadResponse.ok) {
+                    console.log('File uploaded successfully');
+                    //alert('Upload successful');
+
+                    window.location.href = 'https://ddna-andreas-khn--assessment.soului.dh.az.soulmachines.cloud/?sig=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MDE3NzU1MzcsImlzcyI6InNpZ25lZF91cmwtMWNhOWU2NmUtNWZhMy00ZTAxLTg4YzQtMTNhZTEzZDNiMzg4IiwiZXhwIjoxNzg4MDg5MTM3LCJlbWFpbCI6ImFuZHJlYXMta2huLS1hc3Nlc3NtZW50QGRkbmEuc3R1ZGlvIiwic291bElkIjoiZGRuYS1hbmRyZWFzLWtobi0tYXNzZXNzbWVudCJ9.CxjmlGy5B-A1_chDUJGpGCEMk69ITQHw0vBxgZZXFqQ';
+                } else {
+                    alert('Error uploading file:', uploadResponse.statusText);
+                    console.error('Error uploading file:', uploadResponse.statusText);
                 }
             }
-        });
+            }
+        );
     </script>
-    <!--<script
-    src="https://static.soulmachines.com/widget-snippet-1.12.0.min.js"
-    data-sm-api-key="eyJzb3VsSWQiOiJkZG5hLWFuZHJlYXMta2huLS1hc3Nlc3NtZW50IiwiYXV0aFNlcnZlciI6Imh0dHBzOi8vZGguYXouc291bG1hY2hpbmVzLmNsb3VkL2FwaS9qd3QiLCJhdXRoVG9rZW4iOiJhcGlrZXlfdjFfM2Y2MTk0MGItMzdjYS00NmJjLWJjYjYtYjVmNGI2ODZkODYyIn0="
-    ></script>-->
-    <!--<script>
-        /**
-  * add support here for all JS-based config options,
-  * assigning them to the web component's HTML attributes
-  */
-
-function configureSMWidget(config) {
-  const el = document.createElement('sm-widget');
-
-  if (config.smTokenServer) {
-    el.setAttribute('token-server', config.smTokenServer);
-  }
-
-  if (config.smApiKey) {
-    el.setAttribute('api-key', config.smApiKey);
-  }
-
-  if (config.smProfilePicture) {
-    el.setAttribute('profile-picture', config.smProfilePicture);
-  }
-
-  if (config.smGreeting) {
-    el.setAttribute('greeting', config.smGreeting);
-  }
-
-  if (config.smPosition) {
-    el.setAttribute('position', config.smPosition);
-  }
-
-  if (config.smLayout) {
-    el.setAttribute('layout', config.smLayout);
-  }
-
-  document.body.appendChild(el);
-}
-
-function createCSSLink(fileName) {
-  const link = document.createElement('link');
-  link.type = "text/css";
-  link.rel = "stylesheet";
-  link.href = fileName;
-  return link;
-}
-
-function createJsScript(fileName) {
-  const script = document.createElement('script');
-  script.async = false;
-  script.defer = true;
-  script.src = fileName;
-
-  return script;
-}
-
-function insertIntoHead(el) {
-  const parentScript = document.getElementsByTagName('script')[0];
-  parentScript.parentNode.insertBefore(el, parentScript);
-}
-
-function configureSMWidget(config) {
-  const el = document.createElement('sm-widget');
-
-  // ... other configurations ...
-
-  if (config.smApiKey) {
-    el.setAttribute('api-key', config.smApiKey);
-  }
-
-  // ... rest of the function ...
-}
-
-const apiKey = "eyJzb3VsSWQiOiJkZG5hLWFuZHJlYXMta2huLS1hc3Nlc3NtZW50IiwiYXV0aFNlcnZlciI6Imh0dHBzOi8vZGguYXouc291bG1hY2hpbmVzLmNsb3VkL2FwaS9qd3QiLCJhdXRoVG9rZW4iOiJhcGlrZXlfdjFfM2Y2MTk0MGItMzdjYS00NmJjLWJjYjYtYjVmNGI2ODZkODYyIn0"; // Replace with your actual API key
-
-(function () {
-  const script = createJsScript('https://static.soulmachines.com/web-components.1.12.0.js');
-  const cssLink = createCSSLink('https://static.soulmachines.com/web-components.1.12.0.css');
-  const config = {
-    ...document.currentScript.dataset,
-    ...window.smConfig,
-    smApiKey: apiKey // Include the API key in the configuration
-
-  };
-
-  script.onload = () => {
-    //configureSMWidget(config);
-
-    configureSMWidget(config);
-    console.log('%cWidget version: 1.12.0', "color: #FFFFFF; font-size: 18px; background: #1E5B98; padding: 10px;");
-    console.log('Hello World!')
-  };
-
-  window.addEventListener('DOMContentLoaded', () => {
-    insertIntoHead(cssLink)
-    insertIntoHead(script);
-  });
-})();
-    </script>-->
 </body>
 
 </html>
-
-
-
-
-
-
- 
-
-
-
