@@ -27,12 +27,12 @@
             width: 300px;
         }
  
-        #uploadForm div {
+        #uploadForm .input-element-container {
             margin-bottom: 15px;
             position: relative;
         }
  
-        label {
+        .input-element-container label {
             color: #333;
             position: absolute;
             bottom: 8px;
@@ -84,7 +84,7 @@
             color: white;
         }
  
-        .input-not-empty {
+        .input-element-container label.input-not-empty {
             color: transparent;
         }
  
@@ -98,17 +98,21 @@
 </head>
 <body>
     <form id="uploadForm">
-        <div>
+        <div class="input-element-container">
             <input type="text" id="vorname" name="vorname" required placeholder=" " oninput="toggleLabelVisibility(this)">
             <label for="vorname">Vorname</label>
         </div>
-        <div>
+        <div class="input-element-container">
             <input type="text" id="nachname" name="nachname" required placeholder=" " oninput="toggleLabelVisibility(this)">
             <label for="nachname">Nachname</label>
         </div>
-        <div>
+        <div class="input-element-container">
             <input type="email" id="email" name="email" required placeholder=" " oninput="toggleLabelVisibility(this)">
             <label for="email">Email</label>
+        </div>
+        <div class="input-element-container">
+            <input type="text" id="stelle" name="stelle" placeholder=" " oninput="toggleLabelVisibility(this)">
+            <label for="stelle">Für welche Stelle bewerben Sie sich?</label>
         </div>
         <div class="blockS-container">
             <button type="button" id="CVButton" class="cv-button">Lebenslauf hochladen</button>
@@ -120,6 +124,10 @@
             class="hidden"
             accept="application/pdf"
         />
+		<div style="display: flex; flex-direction: row; align-items: start;">			
+			<input type="checkbox" id="datenschutz" name="datenschutz" value="1" style="margin-right: 10px;" />
+			<label for="datenschutz">Ich habe die Datenschutzerklärung gelesen und akzeptiert</label>
+		</div>
         <div>
             <button type="submit">Submit</button>
         </div>
@@ -160,6 +168,12 @@
  
             form.addEventListener('submit', function(event) {
                 event.preventDefault();
+				
+				if (!document.getElementById('datenschutz').checked) {
+					alert('Bitte akzeptieren Sie die Datenschutzerklärung.');
+					return;
+				}
+				
                 doS3Upload();
             });
 
@@ -178,6 +192,7 @@
                 var vorname = document.getElementById('vorname').value;
                 var nachname = document.getElementById('nachname').value;
                 var email = document.getElementById('email').value;
+                var stelle = document.getElementById('stelle').value;
                 
                 // Create a new file name using the original file name and user's email
                 //var newFileName = file.name.split('.').slice(0, -1).join('.') + '_' + email.replace(/[@.]/g, '_') + '.pdf';
@@ -193,6 +208,7 @@
                         vorname: vorname,
                         nachname: nachname,
                         email: email,
+                        stelle: stelle,
                         contentType: file.type || "application/octet-stream; charset=binary",
                     }),
                 });
