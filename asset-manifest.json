@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.bc0e9a5e.css",
-    "main.js": "/static/js/main.9e5c40fc.js",
+    "main.js": "/static/js/main.8f2a2a81.js",
     "static/js/27.ed0556d1.chunk.js": "/static/js/27.ed0556d1.chunk.js",
     "static/media/placeholder-headshot.png": "/static/media/placeholder-headshot.0a1561603a010afa17ae.png",
     "static/media/sm-logo-retina.webp": "/static/media/sm-logo-retina.7dc29d0c4f190753b34a.webp",
@@ -12,6 +12,6 @@
   },
   "entrypoints": [
     "static/css/main.bc0e9a5e.css",
-    "static/js/main.9e5c40fc.js"
+    "static/js/main.8f2a2a81.js"
   ]
 }
