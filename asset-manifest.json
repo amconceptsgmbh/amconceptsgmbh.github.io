@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.d2e333da.css",
-    "main.js": "/static/js/main.048d8e63.js",
+    "main.js": "/static/js/main.f793c7f9.js",
     "static/js/206.782dac19.chunk.js": "/static/js/206.782dac19.chunk.js",
     "static/media/Isobel.png": "/static/media/Isobel.f7a62d748a00b3f547cf.png",
     "static/media/Logo_AMC.webp": "/static/media/Logo_AMC.43f501f43b1c9b5d390f.webp",
@@ -12,6 +12,6 @@
   },
   "entrypoints": [
     "static/css/main.d2e333da.css",
-    "static/js/main.048d8e63.js"
+    "static/js/main.f793c7f9.js"
   ]
 }
